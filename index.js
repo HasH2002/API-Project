@@ -1,10 +1,24 @@
+require("dotenv").config();
+
 const express = require("express");
+const mongoose = require("mongoose");
 var bodyParser = require("body-parser");
 // database
 const database = require("./databse");
 // init express
 const bucky = express();
 bucky.use(bodyParser.urlencoded({ extended: true }));
+bucky.use(bodyParser.json());
+
+mongoose
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  })
+  .then(() => console.log("connection established"));
+
 /*
 route         /
 description   get all the books
@@ -167,6 +181,131 @@ bucky.get("/pubs/books/:isbn", (req, res) => {
     });
   }
   return res.json({ publications: getSpecificpublication });
+});
+// post
+// post book
+/*
+route         /book/new
+description   add new book
+access        public
+parameter     none
+methods       post
+*/
+bucky.post("/book/new", (req, res) => {
+  const newBook = req.body;
+  database.books.push(newBook);
+  return res.json({ updatedBooks: database.books });
+});
+
+// post author
+/*
+route         /author/new
+description   add new author
+access        public
+parameter     none
+methods       post
+*/
+bucky.post("/author/new", (req, res) => {
+  const newAuthor = req.body;
+  database.author.push(newAuthor);
+  return res.json({ updatedBooks: database.author });
+});
+
+/*
+route         /pubs/new
+description   add new pubs
+access        public
+parameter     none
+methods       post
+*/
+// post pubs
+bucky.post("/pubs/new", (req, res) => {
+  const newPublication = req.body;
+  database.publications.push(newPublication);
+  return res.json({ updatedpublications: database.publications });
+});
+/*
+route         /publication/update/book/
+description   add new pubs
+access        public
+parameter     isbn
+methods       post
+*/
+// put -update details of books if changed
+
+bucky.put("/publication/update/book/:isbn", (req, res) => {
+  // to update publication database
+  database.publications.forEach((pub) => {
+    // in database of publication the code checks with the given id of publication and if its found it pushes the params to books object of publications
+    if (pub.id === req.body.pubid) {
+      return pub.books.push(req.params.isbn);
+    }
+  });
+  // to update book database
+  database.books.forEach((book) => {
+    if (book.ISBN === req.params.isbn) {
+      database.books.publications === req.body.pubid;
+    }
+  });
+  return res.json({
+    books: database.books,
+    publications: database.publications,
+    message: "database succesfully updated",
+  });
+});
+// delete
+//  to delete a book
+/*
+route         /book/delete
+description   delete a book
+access        public
+parameter     isbn
+methods       delete
+*/
+
+bucky.delete("/book/delete/:isbn", (req, res) => {
+  // move the other isbn to updated database and filter the match
+  const updatedBookDatabase = database.books.filter(
+    (book) => book.ISBN !== req.params.isbn
+  );
+  database.books = updatedBookDatabase;
+  return res.json({ books: database.books });
+});
+// to delete a author from a book and vice versa
+/*
+route         /book/delete/author
+description   delete a book
+access        public
+parameter     isbn,authorid
+methods       delete
+*/
+// to update book database
+bucky.delete("/book/delete/author/:isbn/:authorid", (req, res) => {
+  database.books.forEach((book) => {
+    if (book.ISBN === req.params.isbn) {
+      const newAuthorList = book.author.filter(
+        (eachAuthor) => eachAuthor !== parseInt(req.params.authorid)
+      );
+      book.author = newAuthorList;
+      return;
+    }
+  });
+
+  // to update author database
+  database.author.forEach((eachAuthor) => {
+    if (eachAuthor.id === parseInt(req.params.authorid)) {
+      const newBookList = eachAuthor.books.filter(
+        (book) => book !== req.params.isbn
+      );
+      eachAuthor.books = newBookList;
+    }
+    return;
+  });
+  return res.json({
+    book: database.books,
+    author: database.author,
+    messsage: "author was deleted",
+  });
 });
 
 // port

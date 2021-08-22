@@ -28,6 +28,14 @@
 
 // post request
 
-// add new book                                     -
-// add new publication                              -
-// add new author                                   -
+// add new book                                     -done
+// add new publication                              -done
+// add new author                                   -done
+
+// put
+// update book details if changed                   -done
+
+// delete
+// delete a book                                            -
+// delete a author                                          -
+// delete a author from book and related book from author   -
